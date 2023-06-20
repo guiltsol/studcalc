@@ -1,7 +1,14 @@
-from tkinter import StringVar
+from tkinter import *
 import customtkinter
-import matan as mat
+import matplotlib
 import matplotlib.pyplot as plt
+import matan as mat
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+canvas = None  # canvas for integral
+canvas1 = None  # canvas for derivative
+theme_switch = None  # switch for theme in settings
+themeFlag = 0  # flag for icoset
 
 # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_appearance_mode("light")
@@ -11,45 +18,89 @@ customtkinter.set_default_color_theme("dark-blue")
 app = customtkinter.CTk()
 app.geometry("1000x700")
 app.title("Student Calculator")
-app.wm_iconbitmap(r"D:/pet prod/studcalc/icons/icomain.ico")
-# app.wm_iconbitmap(r"icons/icomain.ico")
+# app.wm_iconbitmap(r"c:/users/kuchi/studcalc/icons")
+app.wm_iconbitmap(r"icons/icomain.ico")
 
 
 def bmatan_event():
     window = app
     bmatan.pack_forget()
-    back1.pack_forget()
-    back2.pack()
+    backfSections.pack_forget()
+    backfMatan.pack()
     window.title("Матан")
     window.geometry("1000x700")
     bintegral.pack()
-    window.wm_iconbitmap(r"D:/pet prod/studcalc/icons/icomain.ico")
+    bderivative.pack()
+    window.wm_iconbitmap(r"icons/icomain.ico")
     window.mainloop()
 
 
 def integrate(v):
+    global canvas
     print("clickinter")
-    str = mat.integrate(v)
-    print(str)
-    ax = plt.axes([0, 0, 0.3, 0.3])  #left,bottom,width,height
+    result = mat.integrate(v)
+
+    result_length = len(result)  # result length for canvas
+    figsize_width = max(4, result_length * 0.1)  # 0.1  - coeff
+    fig, ax = plt.subplots(figsize=(figsize_width, 2))
     ax.set_xticks([])
     ax.set_yticks([])
     ax.axis('off')
-    plt.text(0.4, 0.4, '$%s$' % str, size=25, color="black")
-    plt.show()
+    ax.text(0.1, 0.4, '$%s$' % result, size=25, color="black")  # text position
+
+    if canvas:
+        canvas.get_tk_widget().pack_forget()
+    canvas = FigureCanvasTkAgg(fig, master=app)
+    canvas.draw()
+    canvas.get_tk_widget().pack(pady=30)
+
+
+def diff(v):
+    global canvas1
+    result = mat.diff(v)
+
+    result_length = len(result)  # result length for canvas
+    figsize_width = max(4, result_length * 0.1)  # 0.1  - coeff
+    fig, ax = plt.subplots(figsize=(figsize_width, 2))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.axis('off')
+    ax.text(0.1, 0.4, '$%s$' % result, size=25, color="black")  # text position
+
+    if canvas1:
+        canvas1.get_tk_widget().pack_forget()
+    canvas1 = FigureCanvasTkAgg(fig, master=app)
+    canvas1.draw()
+    canvas1.get_tk_widget().pack(pady=30)
 
 
 def bintegral_event():
     v = StringVar()
     window = app
-    back2.pack_forget()
-    back3.pack()
+    bderivative.pack_forget()
+    backfMatan.pack_forget()
+    backfIntegral.pack()
     bintegral.pack_forget()
-    window.title("Неопределнный интеграл")
+    window.title("Неопределенный интеграл")
     window.geometry("1000x700")
-    intergrateEntry.pack(pady=30)
+    intergrateEntry.pack(pady=10)
     bintegrate.pack(pady=5)
-    window.wm_iconbitmap(r"D:/pet prod/studcalc/icons/icomain.ico")
+    window.wm_iconbitmap(r"icons/icomain.ico")
+    window.mainloop()
+
+
+def bderivative_event():
+    v = StringVar()
+    window = app
+    backfMatan.pack_forget()
+    backfDerivative.pack()
+    bderivative.pack_forget()
+    bintegral.pack_forget()
+    window.title("Производная")
+    window.geometry("1000x700")
+    derivativeEntry.pack(pady=10)
+    bdiff.pack(pady=5)
+    window.wm_iconbitmap(r"icons/icomain.ico")
     window.mainloop()
 
 
@@ -59,10 +110,27 @@ def bsections_event():
     window.geometry("1000x700")
     bsections.pack_forget()
     bsettings.pack_forget()
-    back1.pack()
+    backfSections.pack()
     bmatan.pack()
-    window.wm_iconbitmap(r"D:/pet prod/studcalc/icons/icomain.ico")
+    if themeFlag:
+        window.wm_iconbitmap(r"icons/icomain.ico")
+    else:
+        window.wm_iconbitmap(r"icons/icomaininvert.ico")
     window.mainloop()
+
+
+theme_var = BooleanVar()  # bool for switch
+
+
+def switch_event():
+    global themeFlag
+    customtkinter.set_appearance_mode("dark" if theme_var.get() else "light")
+    if (theme_var.get()):
+        themeFlag = 0
+        app.wm_iconbitmap(r"icons/icomain.ico")
+    else:
+        themeFlag = 1
+        app.wm_iconbitmap(r"icons/icomaininvert.ico")
 
 
 def bsettings_event():
@@ -70,42 +138,76 @@ def bsettings_event():
     window = app
     bsettings.pack_forget()
     bsections.pack_forget()
-    back.pack()
+    backfSettings.pack()
     window.title("Настройки")
     window.geometry("1000x700")
-    window.wm_iconbitmap(r"D:/pet prod/studcalc/icons/icomain.ico")
+    global theme_switch
+    if not theme_switch:
+        # Add a switch for changing the theme
+        theme_switch = customtkinter.CTkSwitch(
+            app,
+            text="Dark mode",
+            variable=theme_var,
+            onvalue=True,
+            offvalue=False,
+            command=switch_event
+        )
+
+    theme_switch.pack()
+    window.wm_iconbitmap(r"icons/icomain.ico")
     window.mainloop()
 
-def back_s():
+
+def back_set():
+
     app.title("Student Calculator")
     bsections.pack()
     bsettings.pack()
-    back.pack_forget()
+    backfSettings.pack_forget()
+    theme_switch.pack_forget()
 
 
-def back_m():
+def back_sec():
     app.title("Student Calculator")
     bsections.pack()
     bsettings.pack()
-    back1.pack_forget()
+    backfSections.pack_forget()
     bmatan.pack_forget()
 
 
-def back_z():
+def back_mat():
     app.title("Разделы")
-    back2.pack_forget()
-    back1.pack()
+    backfMatan.pack_forget()
+    backfSections.pack()
     bmatan.pack()
     bintegral.pack_forget()
+    bderivative.pack_forget()
 
 
-def back_k():
+def back_int():
+    global canvas
     app.title("Матан")
-    back3.pack_forget()
-    back2.pack()
+    backfIntegral.pack_forget()
+    backfMatan.pack()
     bintegral.pack()
+    bderivative.pack()
     bintegrate.pack_forget()
     intergrateEntry.pack_forget()
+    if canvas:
+        canvas.get_tk_widget().pack_forget()
+
+
+def back_der():
+    global canvas1
+    app.title("Матан")
+    backfDerivative.pack_forget()
+    backfMatan.pack()
+    bintegral.pack()
+    bderivative.pack()
+    bdiff.pack_forget()
+    derivativeEntry.pack_forget()
+    if canvas1:
+        canvas1.get_tk_widget().pack_forget()
 
 
 bmatan = customtkinter.CTkButton(app, text="Матан", command=bmatan_event)
@@ -118,14 +220,22 @@ bsettings = customtkinter.CTkButton(app,
 bintegral = customtkinter.CTkButton(app,
                                     text="Неопределенный интеграл",
                                     command=bintegral_event)
+bderivative = customtkinter.CTkButton(app,
+                                      text="Производная",
+                                      command=bderivative_event)
 intergrateEntry = customtkinter.CTkEntry(
     app, placeholder_text="Введите интегрируемую функцию: ")
+derivativeEntry = customtkinter.CTkEntry(
+    app, placeholder_text="Введите дифференцируемую функцию: ")
 bintegrate = customtkinter.CTkButton(
     app, text="Вычислить", command=lambda: integrate(intergrateEntry.get()))
-back = customtkinter.CTkButton(app, text="Назад", command=back_s)
-back1 = customtkinter.CTkButton(app, text="Назад", command=back_m)
-back2 = customtkinter.CTkButton(app, text="Назад", command=back_z)
-back3 = customtkinter.CTkButton(app, text="Назад", command=back_k)
+bdiff = customtkinter.CTkButton(
+    app, text="Вычислить", command=lambda: diff(derivativeEntry.get()))
+backfSettings = customtkinter.CTkButton(app, text="Назад", command=back_set)
+backfSections = customtkinter.CTkButton(app, text="Назад", command=back_sec)
+backfMatan = customtkinter.CTkButton(app, text="Назад", command=back_mat)
+backfIntegral = customtkinter.CTkButton(app, text="Назад", command=back_int)
+backfDerivative = customtkinter.CTkButton(app, text="Назад", command=back_der)
 bsections.pack()
 bsettings.pack()
 app.mainloop()
